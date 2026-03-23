@@ -112,17 +112,6 @@ public class AuthServiceImpl implements AuthService {
             throw new RuntimeException("User is inactive");
         }
 
-        String testHash = passwordEncoder.encode(request.getPassword());
-
-        System.out.println("NEW HASH: " + testHash);
-        System.out.println("MATCH WITH NEW HASH: " + passwordEncoder.matches(request.getPassword(), testHash));
-        System.out.println("MATCH WITH DB HASH: " + passwordEncoder.matches(request.getPassword(), user.getPasswordHash()));
-
-        System.out.println("RAW PASSWORD: " + request.getPassword());
-        System.out.println("HASH FROM DB: " + user.getPasswordHash());
-        System.out.println("MATCH RESULT: " +
-                passwordEncoder.matches(request.getPassword(), user.getPasswordHash()));
-
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
             throw new RuntimeException("Invalid password");
         }
@@ -132,10 +121,12 @@ public class AuthServiceImpl implements AuthService {
                 .map(link -> link.getRole().getRoleName())
                 .toList();
 
-        String token = jwtUtil.generateToken(user.getId(), user.getEmail(), roles);
+        String token        = jwtUtil.generateToken(user.getId(), user.getEmail(), roles);
+        String refreshToken = jwtUtil.generateRefreshToken(user.getId(), user.getEmail(), roles);
 
         return LoginResponse.builder()
                 .token(token)
+                .refreshToken(refreshToken)
                 .userId(user.getId())
                 .roles(roles)
                 .build();
@@ -174,6 +165,28 @@ public class AuthServiceImpl implements AuthService {
         // 3. Update password
         user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
+    }
+
+    @Override
+    public LoginResponse refreshToken(String refreshToken) {
+
+        if (!jwtUtil.isTokenValid(refreshToken) || !jwtUtil.isRefreshToken(refreshToken)) {
+            throw new RuntimeException("Invalid or expired refresh token");
+        }
+
+        String email       = jwtUtil.extractEmail(refreshToken);
+        Long userId        = jwtUtil.extractUserId(refreshToken);
+        List<String> roles = jwtUtil.extractRoles(refreshToken);
+
+        String newAccessToken  = jwtUtil.generateToken(userId, email, roles);
+        String newRefreshToken = jwtUtil.generateRefreshToken(userId, email, roles);
+
+        return LoginResponse.builder()
+                .token(newAccessToken)
+                .refreshToken(newRefreshToken)
+                .userId(userId)
+                .roles(roles)
+                .build();
     }
 
 }

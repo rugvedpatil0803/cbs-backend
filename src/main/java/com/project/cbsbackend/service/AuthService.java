@@ -15,5 +15,7 @@ public interface AuthService {
     void requestOtp(String email);
 
     void resetPassword(ResetPasswordRequest request);
+
+    LoginResponse refreshToken(String refreshToken);
 }
 

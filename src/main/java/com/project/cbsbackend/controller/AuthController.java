@@ -102,4 +102,26 @@ public class AuthController {
                         .build()
         );
     }
+
+    @PostMapping("/refresh-token")
+    public ResponseEntity<ApiResponse<?>> refresh(@RequestBody RefreshTokenRequest request) {
+        try {
+            LoginResponse data = authService.refreshToken(request.getRefreshToken());
+            return ResponseEntity.ok(
+                    ApiResponse.builder()
+                            .status("success")
+                            .message("Token refreshed")
+                            .data(data)
+                            .build()
+            );
+        } catch (RuntimeException ex) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.builder()
+                            .status("error")
+                            .message(ex.getMessage())
+                            .data(null)
+                            .build()
+                    );
+        }
+    }
 }

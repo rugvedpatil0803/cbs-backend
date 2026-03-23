@@ -96,4 +96,11 @@ curl --location 'http://localhost:8080/auth/login' \
 
 ===================================================================================================================================================================
 
+Refresh Token
 
+curl --location 'http://localhost:8080/auth/refresh-token' \
+--header 'Content-Type: application/json' \
+--header 'Cookie: JSESSIONID=1300C655EF480B326D38BB81EF556FE3' \
+--data '{
+    "refreshToken": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJzYW5qYXkxQGdtYWlsLmNvbSIsInVzZXJJZCI6Miwicm9sZXMiOlsiUEFSVElDSVBBTlQiLCJDT0FDSCJdLCJ0eXBlIjoiUkVGUkVTSCIsImlhdCI6MTc3NDI1NDAxMSwiZXhwIjoxNzc0ODU4ODExfQ.n-teBNo9POMwwno7QhJxi43OE4VJuxNhJk9HTHdG3d8"
+  }'
