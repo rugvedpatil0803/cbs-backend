@@ -3,8 +3,10 @@ package com.project.cbsbackend.service.impl;
 import com.project.cbsbackend.dto.CreateSessionRequest;
 import com.project.cbsbackend.dto.CreateSessionResponse;
 import com.project.cbsbackend.dto.UpdateSessionRequest;
+import com.project.cbsbackend.entity.Availability;
 import com.project.cbsbackend.entity.SessionTemplate;
 import com.project.cbsbackend.entity.User;
+import com.project.cbsbackend.repository.AvailabilityRepository;
 import com.project.cbsbackend.repository.SessionTemplateRepository;
 import com.project.cbsbackend.repository.UserRepository;
 import com.project.cbsbackend.repository.UserRoleLinkRepository;
@@ -24,6 +26,7 @@ public class SessionServiceImpl implements SessionService {
     private final SessionTemplateRepository sessionTemplateRepository;
     private final UserRepository userRepository;
     private final UserRoleLinkRepository userRoleLinkRepository;
+    private final AvailabilityRepository availabilityRepository;  // ← NEW
 
     @Override
     @Transactional
@@ -45,7 +48,6 @@ public class SessionServiceImpl implements SessionService {
 
         // ── 3. Determine coachId ──────────────────────────────────────
         Long coachId;
-
         if (isAdmin && request.getCoachId() != null) {
             coachId = request.getCoachId();
         } else {
@@ -104,7 +106,18 @@ public class SessionServiceImpl implements SessionService {
 
         sessionTemplateRepository.save(session);
 
-        // ── 8. Return response ────────────────────────────────────────
+        // ── 8. Auto create availability entry ─────────────────────────
+        Availability availability = Availability.builder()
+                .session(session)
+                .maxSeat(request.getNoOfSeats())
+                .occupiedSeats(0)
+                .isActive(true)
+                .isDeleted(false)
+                .build();
+
+        availabilityRepository.save(availability);
+
+        // ── 9. Return response ────────────────────────────────────────
         return CreateSessionResponse.builder()
                 .id(session.getId())
                 .name(session.getName())
@@ -164,7 +177,7 @@ public class SessionServiceImpl implements SessionService {
             throw new RuntimeException("Number of seats must be greater than 0");
         }
 
-        // ── 6. Partial update — only update non-null fields ───────────
+        // ── 6. Partial update session fields ──────────────────────────
         if (request.getName()        != null) session.setName(request.getName());
         if (request.getDescription() != null) session.setDescription(request.getDescription());
         if (request.getStartDay()    != null) session.setStartDay(request.getStartDay());
@@ -176,7 +189,22 @@ public class SessionServiceImpl implements SessionService {
 
         sessionTemplateRepository.save(session);
 
-        // ── 7. Return response ────────────────────────────────────────
+        // ── 7. Update availability maxSeat if noOfSeats changed ───────
+        if (request.getNoOfSeats() != null) {
+            Availability availability = availabilityRepository.findBySessionId(sessionId)
+                    .orElseThrow(() -> new RuntimeException("Availability not found for this session"));
+
+            // Make sure new maxSeat is not less than already occupied seats
+            if (request.getNoOfSeats() < availability.getOccupiedSeats()) {
+                throw new RuntimeException("New seat count cannot be less than already occupied seats ("
+                        + availability.getOccupiedSeats() + ")");
+            }
+
+            availability.setMaxSeat(request.getNoOfSeats());
+            availabilityRepository.save(availability);
+        }
+
+        // ── 8. Return response ────────────────────────────────────────
         return CreateSessionResponse.builder()
                 .id(session.getId())
                 .name(session.getName())

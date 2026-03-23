@@ -175,3 +175,52 @@ curl --location --request PUT 'http://localhost:8080/api/session/update/1' \
     "description": "Updated by admin",
     "noOfSeats": 10
   }'
+
+
+===================================================================================================================================================================
+
+Book Session by Participant
+
+
+curl --location 'http://localhost:8080/api/booking/create' \
+--header 'Content-Type: application/json' \
+--header 'Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhbmtpdDFAZ21haWwuY29tIiwidXNlcklkIjoxMCwicm9sZXMiOlsiUEFSVElDSVBBTlQiXSwidHlwZSI6IkFDQ0VTUyIsImlhdCI6MTc3NDI2NzE5MCwiZXhwIjoxNzc0MjcwNzkwfQ.dRrKpz2TO-8JFQevL5IbWfss3C9q8M2AdVKoFUXsN1A' \
+--header 'Cookie: JSESSIONID=D459420FA3733C36CDAE5FE06DC6D5DF' \
+--data '{
+    "sessionId": 1
+  }'
+
+
+
+===================================================================================================================================================================
+
+ Book Session by Admin
+
+
+ curl --location 'http://localhost:8080/api/booking/create' \
+ --header 'Content-Type: application/json' \
+ --header 'Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbkBnbWFpbC5jb20iLCJ1c2VySWQiOjE2LCJyb2xlcyI6WyJBRE1JTiJdLCJ0eXBlIjoiQUNDRVNTIiwiaWF0IjoxNzc0MjY3MzE5LCJleHAiOjE3NzQyNzA5MTl9.kNCyDu4SznfXVbMGrfkA1A79zjsScLG3o1di2k2tsMc' \
+ --header 'Cookie: JSESSIONID=D459420FA3733C36CDAE5FE06DC6D5DF' \
+ --data '{
+     "sessionId": 1,
+     "participantId": 3
+   }'
+
+===================================================================================================================================================================
+
+Cancel session by Participant
+
+curl --location --request DELETE 'http://localhost:8080/api/booking/unenroll/1' \
+--header 'Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJwcml5YTFAZ21haWwuY29tIiwidXNlcklkIjo2LCJyb2xlcyI6WyJQQVJUSUNJUEFOVCJdLCJ0eXBlIjoiQUNDRVNTIiwiaWF0IjoxNzc0MjcxMDY4LCJleHAiOjE3NzQyNzQ2Njh9.W3n1TnAzYRUyLXbMcBtuLbu-i-AjHk9K9D4IMkzfnR8' \
+--header 'Cookie: JSESSIONID=D459420FA3733C36CDAE5FE06DC6D5DF'
+
+
+===================================================================================================================================================================
+
+Cancel session by Admin
+
+curl --location --request DELETE 'http://localhost:8080/api/booking/unenroll/1?participantId=10' \
+--header 'Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbkBnbWFpbC5jb20iLCJ1c2VySWQiOjE2LCJyb2xlcyI6WyJBRE1JTiJdLCJ0eXBlIjoiQUNDRVNTIiwiaWF0IjoxNzc0MjcxNzY5LCJleHAiOjE3NzQyNzUzNjl9.KWkjq-cEquZH95ubOZB2Vd1hkW8gaqTVUdtHGVDfeDo' \
+--header 'Cookie: JSESSIONID=D459420FA3733C36CDAE5FE06DC6D5DF'
+
+===================================================================================================================================================================
