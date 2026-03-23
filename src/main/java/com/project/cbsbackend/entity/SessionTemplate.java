@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "tbl_session_template")
@@ -30,10 +31,10 @@ public class SessionTemplate {
     private User coach;
 
     @Column(name = "start_day")
-    private String startDay;
+    private LocalDate startDay;
 
     @Column(name = "end_day")
-    private String endDay;
+    private LocalDate endDay;
 
     @Column(name = "start_time")
     private LocalTime startTime;

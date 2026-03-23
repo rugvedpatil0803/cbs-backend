@@ -104,3 +104,74 @@ curl --location 'http://localhost:8080/auth/refresh-token' \
 --data '{
     "refreshToken": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJzYW5qYXkxQGdtYWlsLmNvbSIsInVzZXJJZCI6Miwicm9sZXMiOlsiUEFSVElDSVBBTlQiLCJDT0FDSCJdLCJ0eXBlIjoiUkVGUkVTSCIsImlhdCI6MTc3NDI1NDAxMSwiZXhwIjoxNzc0ODU4ODExfQ.n-teBNo9POMwwno7QhJxi43OE4VJuxNhJk9HTHdG3d8"
   }'
+
+===================================================================================================================================================================
+
+Create Session By Coach
+
+curl --location 'http://localhost:8080/api/session/create' \
+--header 'Content-Type: application/json' \
+--header 'Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJzYW5qYXkxQGdtYWlsLmNvbSIsInVzZXJJZCI6Miwicm9sZXMiOlsiUEFSVElDSVBBTlQiLCJDT0FDSCJdLCJ0eXBlIjoiQUNDRVNTIiwiaWF0IjoxNzc0MjYwNDAyLCJleHAiOjE3NzQyNjQwMDJ9.cKdhzSd6U5FtEwbm-tRQJzQqFGDLtUtfGnxq2-l7F3k' \
+--header 'Cookie: JSESSIONID=D459420FA3733C36CDAE5FE06DC6D5DF' \
+--data '{
+    "name": "Morning Coaching",
+    "description": "One on one coaching session",
+    "startDay": "2026-04-01",
+    "endDay": "2026-04-30",
+    "startTime": "09:00:00",
+    "endTime": "10:00:00",
+    "noOfSeats": 5
+  }'
+
+
+===================================================================================================================================================================
+
+
+
+  Create Session By Admin
+
+  curl --location 'http://localhost:8080/api/session/create' \
+  --header 'Content-Type: application/json' \
+  --header 'Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbkBnbWFpbC5jb20iLCJ1c2VySWQiOjE2LCJyb2xlcyI6WyJBRE1JTiJdLCJ0eXBlIjoiQUNDRVNTIiwiaWF0IjoxNzc0MjYzMzY5LCJleHAiOjE3NzQyNjY5Njl9.ex8RKM0OARnZYd5WjaowhQ3HJou3sly99tBSfGc4DTA' \
+  --header 'Cookie: JSESSIONID=D459420FA3733C36CDAE5FE06DC6D5DF' \
+  --data '{
+      "name": "Morning Coaching",
+      "description": "One on one coaching session",
+      "startDay": "2026-04-01",
+      "endDay": "2026-04-30",
+      "startTime": "09:00:00",
+      "endTime": "10:00:00",
+      "noOfSeats": 5,
+      "coachId": 2
+    }'
+
+
+===================================================================================================================================================================
+
+
+Update Session By Coach
+
+
+curl --location --request PUT 'http://localhost:8080/api/session/update/1' \
+--header 'Content-Type: application/json' \
+--header 'Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJzYW5qYXkxQGdtYWlsLmNvbSIsInVzZXJJZCI6Miwicm9sZXMiOlsiUEFSVElDSVBBTlQiLCJDT0FDSCJdLCJ0eXBlIjoiQUNDRVNTIiwiaWF0IjoxNzc0MjY0NTkwLCJleHAiOjE3NzQyNjgxOTB9.2dIF8iJpdLBhSypVruH37e6Ow9JjhFbXCBgwenBw1rc' \
+--header 'Cookie: JSESSIONID=D459420FA3733C36CDAE5FE06DC6D5DF' \
+--data '{
+    "name": "Updated Morning Coaching",
+    "noOfSeats": 8
+  }'
+
+===================================================================================================================================================================
+
+
+Update Session by Admin
+
+
+curl --location --request PUT 'http://localhost:8080/api/session/update/1' \
+--header 'Content-Type: application/json' \
+--header 'Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbkBnbWFpbC5jb20iLCJ1c2VySWQiOjE2LCJyb2xlcyI6WyJBRE1JTiJdLCJ0eXBlIjoiQUNDRVNTIiwiaWF0IjoxNzc0MjY0ODk1LCJleHAiOjE3NzQyNjg0OTV9.SN-o3M68RlBjaU9EqY7NdOgebRXRjrjqPxZ3N834yUc' \
+--header 'Cookie: JSESSIONID=D459420FA3733C36CDAE5FE06DC6D5DF' \
+--data '{
+    "description": "Updated by admin",
+    "noOfSeats": 10
+  }'
