@@ -9,4 +9,5 @@ import java.util.List;
 public interface UserRoleLinkRepository extends JpaRepository<UserRoleLink, Long> {
 
     List<UserRoleLink> findByUser(User user);
+    List<UserRoleLink> findByUserId(Long userId);
 }
