@@ -1,0 +1,99 @@
+| Email                                         | Password     | Role        |
+| --------------------------------------------- | ------------ | ----------- |
+| [Sanjay@gmail.com](mailto:Sanjay@gmail.com)   | Password@123 | PARTICIPANT |
+| [sanjay1@gmail.com](mailto:sanjay1@gmail.com) | NewPass@123  | PARTICIPANT AND COACH|
+| [amit1@gmail.com](mailto:amit1@gmail.com)     | Password@123 | PARTICIPANT |
+| [rahul1@gmail.com](mailto:rahul1@gmail.com)   | Password@123 | PARTICIPANT |
+| [neha1@gmail.com](mailto:neha1@gmail.com)     | Password@123 | PARTICIPANT |
+| [priya1@gmail.com](mailto:priya1@gmail.com)   | Password@123 | PARTICIPANT |
+| [rohit1@gmail.com](mailto:rohit1@gmail.com)   | Password@123 | PARTICIPANT |
+| [kiran1@gmail.com](mailto:kiran1@gmail.com)   | Password@123 | PARTICIPANT |
+| [sneha1@gmail.com](mailto:sneha1@gmail.com)   | Password@123 | PARTICIPANT |
+| [ankit1@gmail.com](mailto:ankit1@gmail.com)   | Password@123 | PARTICIPANT |
+| [pooja1@gmail.com](mailto:pooja1@gmail.com)   | Password@123 | PARTICIPANT |
+| [vikas@gmail.com](mailto:vikas@gmail.com)     | Password@123 | COACH       |
+| [ramesh@gmail.com](mailto:ramesh@gmail.com)   | Password@123 | COACH       |
+| [suresh@gmail.com](mailto:suresh@gmail.com)   | Password@123 | COACH       |
+| [mahesh@gmail.com](mailto:mahesh@gmail.com)   | Password@123 | COACH       |
+| [admin@gmail.com](mailto:admin@gmail.com)     | Password@123 | ADMIN       |
+
+
+==================================================================================================================================================================
+
+
+Register Curl
+
+curl --location 'http://localhost:8080/auth/register' \
+--header 'Content-Type: application/json' \
+--header 'Cookie: JSESSIONID=6CF3D8CFBD66C0116CDBEF3CBAD5B32F' \
+--data-raw '{
+  "firstName": "Sanjay",
+  "lastName": "Sharma",
+  "email": "Sanjay@gmail.com",
+  "password": "Password@123",
+  "contactNumber": "9876543210",
+  "address": "Pune",
+  "role": "participant",
+  "motivation": "Want guidance",
+  "reason": "Career growth",
+  "preferredSessionDuration": 60,
+  "bio": null
+}'
+
+
+
+==================================================================================================================================================================
+
+
+Email Check
+
+curl --location 'http://localhost:8080/auth/login/email' \
+--header 'Content-Type: application/json' \
+--header 'Cookie: JSESSIONID=1300C655EF480B326D38BB81EF556FE3' \
+--data-raw '{"email":"sanjay1@gmail.com"}'
+
+
+==================================================================================================================================================================
+
+
+Request OTP
+
+
+curl --location 'http://localhost:8080/auth/request-otp' \
+--header 'Content-Type: application/json' \
+--header 'Cookie: JSESSIONID=1300C655EF480B326D38BB81EF556FE3' \
+--data-raw '{
+  "email": "sanjay1@gmail.com"
+}'
+
+
+=================================================================================================================================================================
+
+Reset Password
+
+curl --location 'http://localhost:8080/auth/reset' \
+--header 'Content-Type: application/json' \
+--header 'Cookie: JSESSIONID=1300C655EF480B326D38BB81EF556FE3' \
+--data-raw '{
+  "email": "sanjay1@gmail.com",
+  "otp": "123456",
+  "newPassword": "NewPass@123"
+}'
+
+=================================================================================================================================================================
+
+
+Login API
+
+curl --location 'http://localhost:8080/auth/login' \
+--header 'Content-Type: application/json' \
+--header 'Cookie: JSESSIONID=1300C655EF480B326D38BB81EF556FE3' \
+--data-raw '{
+  "email": "sanjay1@gmail.com",
+  "password": "NewPass@123"
+}'
+
+
+===================================================================================================================================================================
+
+
