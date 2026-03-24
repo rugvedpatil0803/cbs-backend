@@ -1,16 +1,15 @@
 package com.project.cbsbackend.controller;
 
 import com.project.cbsbackend.config.JwtUtil;
-import com.project.cbsbackend.dto.ApiResponse;
-import com.project.cbsbackend.dto.CreateSessionRequest;
-import com.project.cbsbackend.dto.CreateSessionResponse;
-import com.project.cbsbackend.dto.UpdateSessionRequest;
+import com.project.cbsbackend.dto.*;
 import com.project.cbsbackend.service.SessionService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/session")
@@ -91,6 +90,64 @@ public class SessionController {
                             .data(null)
                             .build()
                     );
+        }
+    }
+
+    @GetMapping("/upcoming")
+    public ResponseEntity<ApiResponse<?>> getUpcomingSessions() {
+        try {
+            List<SessionWithAvailabilityResponse> data = sessionService.getUpcomingSessions();
+            return ResponseEntity.ok(ApiResponse.builder()
+                    .status("success")
+                    .message("Upcoming sessions fetched successfully")
+                    .data(data)
+                    .build());
+        } catch (Exception ex) {
+            System.out.println("ERROR: " + ex.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.builder()
+                            .status("error")
+                            .message("Something went wrong")
+                            .data(null)
+                            .build());
+        }
+    }
+
+    @GetMapping("/ongoing")
+    public ResponseEntity<ApiResponse<?>> getOngoingSessions() {
+        try {
+            List<SessionWithAvailabilityResponse> data = sessionService.getOngoingSessions();
+            return ResponseEntity.ok(ApiResponse.builder()
+                    .status("success")
+                    .message("Ongoing sessions fetched successfully")
+                    .data(data)
+                    .build());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.builder()
+                            .status("error")
+                            .message("Something went wrong")
+                            .data(null)
+                            .build());
+        }
+    }
+
+    @GetMapping("/completed")
+    public ResponseEntity<ApiResponse<?>> getCompletedSessions() {
+        try {
+            List<SessionWithAvailabilityResponse> data = sessionService.getCompletedSessions();
+            return ResponseEntity.ok(ApiResponse.builder()
+                    .status("success")
+                    .message("Completed sessions fetched successfully")
+                    .data(data)
+                    .build());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.builder()
+                            .status("error")
+                            .message("Something went wrong")
+                            .data(null)
+                            .build());
         }
     }
 }

@@ -27,12 +27,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private final ApiRoleLinkRepository apiRoleLinkRepository;
 
     private static final List<String> PUBLIC_URLS = List.of(
-            "/auth/login",
-            "/auth/register",
-            "/auth/login/email",
-            "/auth/request-otp",
-            "/auth/reset",
-            "/auth/refresh-token"
+            "/api/auth/login",
+            "/api/auth/register",
+            "/api/auth/login/email",
+            "/api/auth/request-otp",
+            "/api/auth/reset",
+            "/api/auth/refresh-token"
     );
 
     @Override

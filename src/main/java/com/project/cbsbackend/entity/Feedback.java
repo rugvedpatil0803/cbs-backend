@@ -5,7 +5,12 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "tbl_feedback")
+@Table(
+        name = "tbl_feedback",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = {"user_id", "session_id"})  // one feedback per user per session
+        }
+)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -17,10 +22,15 @@ public class Feedback {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // 🔗 One feedback per booking
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "booking_id", nullable = false, unique = true)
-    private Booking booking;
+    // 🔗 Participant who gave the feedback
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    // 🔗 Session being reviewed
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "session_id", nullable = false)
+    private SessionTemplate session;
 
     @Column(name = "rating")
     private Integer rating;
@@ -40,7 +50,6 @@ public class Feedback {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    // Auto timestamps
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();

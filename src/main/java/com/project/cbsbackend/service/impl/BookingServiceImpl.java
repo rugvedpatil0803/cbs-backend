@@ -2,6 +2,7 @@ package com.project.cbsbackend.service.impl;
 
 import com.project.cbsbackend.dto.CreateBookingRequest;
 import com.project.cbsbackend.dto.CreateBookingResponse;
+import com.project.cbsbackend.dto.UserBookingResponse;
 import com.project.cbsbackend.entity.Availability;
 import com.project.cbsbackend.entity.Booking;
 import com.project.cbsbackend.entity.SessionTemplate;
@@ -16,7 +17,9 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -92,25 +95,43 @@ public class BookingServiceImpl implements BookingService {
             throw new RuntimeException("Target user is not a participant");
         }
 
-        // ── 10. Check duplicate booking ───────────────────────────────
-        boolean alreadyBooked = bookingRepository
-                .existsBySessionIdAndUserIdAndIsDeletedFalse(session.getId(), participantId);
+// ── 10. Check duplicate booking ───────────────────────────────
+        Optional<Booking> existingBookingOpt =
+                bookingRepository.findBySessionIdAndUserId(session.getId(), participantId);
 
-        if (alreadyBooked) {
-            throw new RuntimeException("Participant has already booked this session");
+        Booking booking;
+
+        if (existingBookingOpt.isPresent()) {
+
+            booking = existingBookingOpt.get();
+
+            // 🔴 If already active → block
+            if (booking.getIsActive() && !booking.getIsDeleted()) {
+                throw new RuntimeException("Participant has already booked this session");
+            }
+
+            // 🟢 Re-enroll case
+            booking.setIsActive(true);
+            booking.setIsDeleted(false);
+            booking.setBookingTime(LocalDateTime.now());
+
+        } else {
+            // 🟢 Fresh booking
+
+            booking = Booking.builder()
+                    .session(session)
+                    .availability(availability)
+                    .user(participant)
+                    .coach(session.getCoach())
+                    .isActive(true)
+                    .isDeleted(false)
+                    .build();
         }
 
-        // ── 11. Create booking ────────────────────────────────────────
-        Booking booking = Booking.builder()
-                .session(session)
-                .availability(availability)
-                .user(participant)
-                .coach(session.getCoach())
-                .isActive(true)
-                .isDeleted(false)
-                .build();
-
         bookingRepository.save(booking);
+
+
+
 
         // ── 12. Increment occupied seats in tbl_availability ──────────
         availability.setOccupiedSeats(availability.getOccupiedSeats() + 1);
@@ -178,6 +199,67 @@ public class BookingServiceImpl implements BookingService {
 
         availability.setOccupiedSeats(Math.max(availability.getOccupiedSeats() - 1, 0));
         availabilityRepository.save(availability);
+    }
+
+    @Override
+    @Transactional
+    public List<UserBookingResponse> getUserBookings(Long requestingUserId, Long targetParticipantId) {
+
+        // ── 1. Get roles of requesting user ───────────────────────────
+        List<String> roles = userRoleLinkRepository.findByUserId(requestingUserId)
+                .stream()
+                .map(link -> link.getRole().getRoleName())
+                .toList();
+
+        boolean isAdmin       = roles.contains("ADMIN");
+        boolean isParticipant = roles.contains("PARTICIPANT");
+
+        // ── 2. Only PARTICIPANT or ADMIN allowed ──────────────────────
+        if (!isAdmin && !isParticipant) {
+            throw new RuntimeException("You are not allowed to view bookings");
+        }
+
+        // ── 3. Determine whose bookings to fetch ──────────────────────
+        Long participantId;
+        if (isAdmin && targetParticipantId != null) {
+            // Admin viewing someone else's bookings
+            participantId = targetParticipantId;
+        } else {
+            // Participant can only see their own — ignore targetParticipantId even if passed
+            participantId = requestingUserId;
+        }
+
+        // ── 4. Verify target participant exists ───────────────────────
+        userRepository.findById(participantId)
+                .filter(u -> !u.getIsDeleted() && u.getIsActive())
+                .orElseThrow(() -> new RuntimeException("Participant not found"));
+
+        // ── 5. Fetch bookings and map ─────────────────────────────────
+        return bookingRepository.findAllActiveBookingsByUserId(participantId)
+                .stream()
+                .map(booking -> {
+                    SessionTemplate session = booking.getSession();
+                    User participant        = booking.getUser();
+                    User coach              = session.getCoach();
+
+                    return UserBookingResponse.builder()
+                            .bookingId(booking.getId())
+                            .bookingTime(booking.getBookingTime())
+                            .sessionId(session.getId())
+                            .sessionName(session.getName())
+                            .sessionDescription(session.getDescription())
+                            .startDay(session.getStartDay())
+                            .endDay(session.getEndDay())
+                            .startTime(session.getStartTime())
+                            .endTime(session.getEndTime())
+                            .metaData(session.getMetaData())
+                            .coachId(coach.getId())
+                            .coachName(coach.getFirstName() + " " + coach.getLastName())
+                            .participantId(participant.getId())
+                            .participantName(participant.getFirstName() + " " + participant.getLastName())
+                            .build();
+                })
+                .toList();
     }
 
 }

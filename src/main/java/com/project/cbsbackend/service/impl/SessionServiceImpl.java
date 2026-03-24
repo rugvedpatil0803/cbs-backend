@@ -3,6 +3,7 @@ package com.project.cbsbackend.service.impl;
 import com.project.cbsbackend.dto.CreateSessionRequest;
 import com.project.cbsbackend.dto.CreateSessionResponse;
 import com.project.cbsbackend.dto.UpdateSessionRequest;
+import com.project.cbsbackend.dto.SessionWithAvailabilityResponse;
 import com.project.cbsbackend.entity.Availability;
 import com.project.cbsbackend.entity.SessionTemplate;
 import com.project.cbsbackend.entity.User;
@@ -218,5 +219,58 @@ public class SessionServiceImpl implements SessionService {
                 .noOfSeats(session.getNoOfSeats())
                 .metaData(session.getMetaData())
                 .build();
+    }
+
+    // ── Private helper: map session + availability → response ──────────────────
+    private SessionWithAvailabilityResponse mapToSessionWithAvailability(SessionTemplate session) {
+        Availability availability = availabilityRepository.findBySessionId(session.getId())
+                .orElse(null);
+
+        int maxSeat      = availability != null ? availability.getMaxSeat()      : 0;
+        int occupiedSeats = availability != null ? availability.getOccupiedSeats() : 0;
+
+        return SessionWithAvailabilityResponse.builder()
+                .sessionId(session.getId())
+                .name(session.getName())
+                .description(session.getDescription())
+                .coachId(session.getCoach().getId())
+                .coachName(session.getCoach().getFirstName() + " " + session.getCoach().getLastName())
+                .startDay(session.getStartDay())
+                .endDay(session.getEndDay())
+                .startTime(session.getStartTime())
+                .endTime(session.getEndTime())
+                .noOfSeats(session.getNoOfSeats())
+                .metaData(session.getMetaData())
+                .maxSeat(maxSeat)
+                .occupiedSeats(occupiedSeats)
+                .availableSeats(maxSeat - occupiedSeats)
+                .build();
+    }
+
+    @Override
+    @Transactional  // ← ADD THIS
+    public List<SessionWithAvailabilityResponse> getUpcomingSessions() {
+        return sessionTemplateRepository.findUpcomingSessions(LocalDate.now())
+                .stream()
+                .map(this::mapToSessionWithAvailability)
+                .toList();
+    }
+
+    @Override
+    @Transactional  // ← ADD THIS
+    public List<SessionWithAvailabilityResponse> getOngoingSessions() {
+        return sessionTemplateRepository.findOngoingSessions(LocalDate.now())
+                .stream()
+                .map(this::mapToSessionWithAvailability)
+                .toList();
+    }
+
+    @Override
+    @Transactional  // ← ADD THIS
+    public List<SessionWithAvailabilityResponse> getCompletedSessions() {
+        return sessionTemplateRepository.findCompletedSessions(LocalDate.now())
+                .stream()
+                .map(this::mapToSessionWithAvailability)
+                .toList();
     }
 }
