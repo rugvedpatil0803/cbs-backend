@@ -55,4 +55,41 @@ public class UserController {
                     );
         }
     }
+
+    @GetMapping("/profile/{userId}")
+    public ResponseEntity<ApiResponse<?>> getProfile(
+            @PathVariable Long userId,
+            jakarta.servlet.http.HttpServletRequest httpRequest) {
+        try {
+            // Get requesting user's ID from token
+            String authHeader = httpRequest.getHeader("Authorization");
+            String token = authHeader.substring(7);
+            Long requestingUserId = jwtUtil.extractUserId(token);
+
+            UpdateProfileResponse data = userService.getProfile(requestingUserId, userId);
+            return ResponseEntity.ok(
+                    ApiResponse.builder()
+                            .status("success")
+                            .message("Profile fetched successfully")
+                            .data(data)
+                            .build()
+            );
+        } catch (RuntimeException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.builder()
+                            .status("error")
+                            .message(ex.getMessage())
+                            .data(null)
+                            .build()
+                    );
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.builder()
+                            .status("error")
+                            .message("Something went wrong")
+                            .data(null)
+                            .build()
+                    );
+        }
+    }
 }

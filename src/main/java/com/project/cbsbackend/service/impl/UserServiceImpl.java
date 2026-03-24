@@ -80,4 +80,47 @@ public class UserServiceImpl implements UserService {
                 .bio(userInfo.getBio())
                 .build();
     }
+
+    @Override
+    public UpdateProfileResponse getProfile(Long requestingUserId, Long targetUserId) {
+
+        // ── 1. Security check ─────────────────────────────────────────
+        List<String> roles = userRoleLinkRepository.findByUserId(requestingUserId)
+                .stream()
+                .map(link -> link.getRole().getRoleName())
+                .toList();
+
+        boolean isAdmin = roles.contains("ADMIN");
+
+        if (!isAdmin && !requestingUserId.equals(targetUserId)) {
+            throw new RuntimeException("You are not allowed to view another user's profile");
+        }
+
+        // ── 2. Fetch target user ──────────────────────────────────────
+        User user = userRepository.findById(targetUserId)
+                .filter(u -> !u.getIsDeleted())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!user.getIsActive()) {
+            throw new RuntimeException("User is inactive");
+        }
+
+        // ── 3. Fetch user info ────────────────────────────────────────
+        UserInfo userInfo = userInfoRepository.findByUserId(targetUserId)
+                .orElseThrow(() -> new RuntimeException("User info not found"));
+
+        // ── 4. Return response ────────────────────────────────────────
+        return UpdateProfileResponse.builder()
+                .userId(user.getId())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .email(user.getEmail())
+                .contactNumber(userInfo.getContactNumber())
+                .address(userInfo.getAddress())
+                .motivation(userInfo.getMotivation())
+                .reason(userInfo.getReason())
+                .preferredSessionDuration(userInfo.getPreferredSessionDuration())
+                .bio(userInfo.getBio())
+                .build();
+    }
 }

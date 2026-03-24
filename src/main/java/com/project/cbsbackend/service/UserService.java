@@ -5,4 +5,5 @@ import com.project.cbsbackend.dto.UpdateProfileResponse;
 
 public interface UserService {
     UpdateProfileResponse updateProfile(Long requestingUserId, Long targetUserId, UpdateProfileRequest request);
+    UpdateProfileResponse getProfile(Long requestingUserId, Long targetUserId); // ← ADD
 }

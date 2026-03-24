@@ -11,4 +11,6 @@ public class LoginResponse {
     private String token;
     private String refreshToken;   // ← add this
     private Long userId;
+    private String firstName;
+    private String lastName;
 }
