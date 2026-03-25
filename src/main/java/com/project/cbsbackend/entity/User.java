@@ -29,7 +29,6 @@ public class User {
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
-    // Store file path or URL
     @Column(name = "profile_photo")
     private String profilePhoto;
 
@@ -48,7 +47,11 @@ public class User {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    // Auto set timestamps
+    // ── NEW ───────────────────────────────────────────────────
+    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
+    private UserInfo userInfo;
+    // ─────────────────────────────────────────────────────────
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();

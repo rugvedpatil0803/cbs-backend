@@ -1,16 +1,8 @@
 package com.project.cbsbackend.service.impl;
 
-import com.project.cbsbackend.dto.CreateSessionRequest;
-import com.project.cbsbackend.dto.CreateSessionResponse;
-import com.project.cbsbackend.dto.UpdateSessionRequest;
-import com.project.cbsbackend.dto.SessionWithAvailabilityResponse;
-import com.project.cbsbackend.entity.Availability;
-import com.project.cbsbackend.entity.SessionTemplate;
-import com.project.cbsbackend.entity.User;
-import com.project.cbsbackend.repository.AvailabilityRepository;
-import com.project.cbsbackend.repository.SessionTemplateRepository;
-import com.project.cbsbackend.repository.UserRepository;
-import com.project.cbsbackend.repository.UserRoleLinkRepository;
+import com.project.cbsbackend.dto.*;
+import com.project.cbsbackend.entity.*;
+import com.project.cbsbackend.repository.*;
 import com.project.cbsbackend.service.SessionService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +19,8 @@ public class SessionServiceImpl implements SessionService {
     private final SessionTemplateRepository sessionTemplateRepository;
     private final UserRepository userRepository;
     private final UserRoleLinkRepository userRoleLinkRepository;
-    private final AvailabilityRepository availabilityRepository;  // ← NEW
+    private final AvailabilityRepository availabilityRepository;
+    private final BookingRepository bookingRepository;
 
     @Override
     @Transactional
@@ -272,5 +265,156 @@ public class SessionServiceImpl implements SessionService {
                 .stream()
                 .map(this::mapToSessionWithAvailability)
                 .toList();
+    }
+
+    @Override
+    @Transactional
+    public MySessionsResponse getMySessions(Long requestingUserId) {
+
+        // Verify the user is a COACH
+        List<String> roles = userRoleLinkRepository.findByUserId(requestingUserId)
+                .stream()
+                .map(link -> link.getRole().getRoleName())
+                .toList();
+
+        if (!roles.contains("COACH") && !roles.contains("ADMIN")) {
+            throw new RuntimeException("You are not a coach");
+        }
+
+        LocalDate today = LocalDate.now();
+
+        List<SessionWithAvailabilityResponse> upcoming = sessionTemplateRepository
+                .findUpcomingSessionsByCoach(today, requestingUserId)
+                .stream()
+                .map(this::mapToSessionWithAvailability)
+                .toList();
+
+        List<SessionWithAvailabilityResponse> ongoing = sessionTemplateRepository
+                .findOngoingSessionsByCoach(today, requestingUserId)
+                .stream()
+                .map(this::mapToSessionWithAvailability)
+                .toList();
+
+        List<SessionWithAvailabilityResponse> completed = sessionTemplateRepository
+                .findCompletedSessionsByCoach(today, requestingUserId)
+                .stream()
+                .map(this::mapToSessionWithAvailability)
+                .toList();
+
+        return MySessionsResponse.builder()
+                .upcoming(upcoming)
+                .ongoing(ongoing)
+                .completed(completed)
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public SessionDetailResponse getSessionDetails(Long requestingUserId, Long sessionId, boolean isAdmin) {
+
+        // ── 1. Fetch session ──────────────────────────────────────
+        SessionTemplate session = sessionTemplateRepository.findById(sessionId)
+                .filter(s -> !s.getIsDeleted())
+                .orElseThrow(() -> new RuntimeException("Session not found"));
+
+        // ── 2. Auth check ─────────────────────────────────────────
+        if (!isAdmin && !session.getCoach().getId().equals(requestingUserId)) {
+            throw new RuntimeException("You are not allowed to view this session");
+        }
+
+        // ── 3. Fetch availability ─────────────────────────────────
+        Availability availability = availabilityRepository.findBySessionId(sessionId)
+                .orElse(null);
+
+        int maxSeat       = availability != null ? availability.getMaxSeat()       : 0;
+        int occupiedSeats = availability != null ? availability.getOccupiedSeats() : 0;
+
+        // ── 4. Fetch bookings (admin sees all, coach sees active only) ─
+        List<Booking> bookings = isAdmin
+                ? bookingRepository.findAllBookingsBySessionId(sessionId)
+                : bookingRepository.findActiveBookingsBySessionId(sessionId);
+
+        // ── 5. Map participants ───────────────────────────────────
+        List<ParticipantResponse> participants = bookings.stream()
+                .map(booking -> {
+                    User user         = booking.getUser();
+                    UserInfo userInfo = user.getUserInfo(); // nullable
+
+                    return ParticipantResponse.builder()
+                            .bookingId(booking.getId())
+                            .bookingTime(booking.getBookingTime())
+                            .userId(user.getId())
+                            .firstName(user.getFirstName())
+                            .lastName(user.getLastName())
+                            .email(user.getEmail())
+                            .profilePhoto(user.getProfilePhoto())
+                            .contactNumber(userInfo != null ? userInfo.getContactNumber() : null)
+                            .address(userInfo != null ? userInfo.getAddress()             : null)
+                            .motivation(userInfo != null ? userInfo.getMotivation()       : null)
+                            .reason(userInfo != null ? userInfo.getReason()               : null)
+                            .preferredSessionDuration(userInfo != null ? userInfo.getPreferredSessionDuration() : null)
+                            .build();
+                })
+                .toList();
+
+        // ── 6. Build and return response ──────────────────────────
+        return SessionDetailResponse.builder()
+                .sessionId(session.getId())
+                .name(session.getName())
+                .description(session.getDescription())
+                .coachId(session.getCoach().getId())
+                .coachName(session.getCoach().getFirstName() + " " + session.getCoach().getLastName())
+                .startDay(session.getStartDay())
+                .endDay(session.getEndDay())
+                .startTime(session.getStartTime())
+                .endTime(session.getEndTime())
+                .noOfSeats(session.getNoOfSeats())
+                .metaData(session.getMetaData())
+                .maxSeat(maxSeat)
+                .occupiedSeats(occupiedSeats)
+                .availableSeats(maxSeat - occupiedSeats)
+                .participants(participants)
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public void deleteSession(Long requestingUserId, Long sessionId) {
+
+        // ── 1. Get roles ──────────────────────────────────────────
+        List<String> roles = userRoleLinkRepository.findByUserId(requestingUserId)
+                .stream()
+                .map(link -> link.getRole().getRoleName())
+                .toList();
+
+        boolean isAdmin = roles.contains("ADMIN");
+        boolean isCoach = roles.contains("COACH");
+
+        // ── 2. Only COACH or ADMIN allowed ────────────────────────
+        if (!isAdmin && !isCoach) {
+            throw new RuntimeException("You are not allowed to delete a session");
+        }
+
+        // ── 3. Fetch session ──────────────────────────────────────
+        SessionTemplate session = sessionTemplateRepository.findById(sessionId)
+                .filter(s -> !s.getIsDeleted())
+                .orElseThrow(() -> new RuntimeException("Session not found"));
+
+        // ── 4. Coach can only delete their own session ────────────
+        if (!isAdmin && !session.getCoach().getId().equals(requestingUserId)) {
+            throw new RuntimeException("You are not allowed to delete this session");
+        }
+
+        // ── 5. Soft delete session ────────────────────────────────
+        session.setIsDeleted(true);
+        session.setIsActive(false);
+        sessionTemplateRepository.save(session);
+
+        // ── 6. Soft delete linked availability ───────────────────
+        availabilityRepository.findBySessionId(sessionId).ifPresent(availability -> {
+            availability.setIsDeleted(true);
+            availability.setIsActive(false);
+            availabilityRepository.save(availability);
+        });
     }
 }

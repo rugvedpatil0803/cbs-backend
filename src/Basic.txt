@@ -23,7 +23,7 @@
 
 Register Curl
 
-curl --location 'http://localhost:8080/auth/register' \
+curl --location 'http://localhost:8080/api/auth/register' \
 --header 'Content-Type: application/json' \
 --header 'Cookie: JSESSIONID=6CF3D8CFBD66C0116CDBEF3CBAD5B32F' \
 --data-raw '{
@@ -59,7 +59,7 @@ curl --location 'http://localhost:8080/auth/login/email' \
 Request OTP
 
 
-curl --location 'http://localhost:8080/auth/request-otp' \
+curl --location 'http://localhost:8080/api/auth/request-otp' \
 --header 'Content-Type: application/json' \
 --header 'Cookie: JSESSIONID=1300C655EF480B326D38BB81EF556FE3' \
 --data-raw '{
@@ -71,7 +71,7 @@ curl --location 'http://localhost:8080/auth/request-otp' \
 
 Reset Password
 
-curl --location 'http://localhost:8080/auth/reset' \
+curl --location 'http://localhost:8080/api/auth/reset' \
 --header 'Content-Type: application/json' \
 --header 'Cookie: JSESSIONID=1300C655EF480B326D38BB81EF556FE3' \
 --data-raw '{

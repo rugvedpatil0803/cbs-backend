@@ -10,7 +10,7 @@ import java.util.Optional;
 
 public interface BookingRepository extends JpaRepository<Booking, Long> {
 
-    boolean existsBySessionIdAndUserId(Long sessionId, Long userId);                            // ← ADD
+    boolean existsBySessionIdAndUserId(Long sessionId, Long userId);
     boolean existsBySessionIdAndUserIdAndIsDeletedFalse(Long sessionId, Long userId);
 
     Optional<Booking> findBySessionIdAndUserId(Long sessionId, Long userId);
@@ -26,4 +26,23 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
         ORDER BY b.bookingTime DESC
     """)
     List<Booking> findAllActiveBookingsByUserId(@Param("participantId") Long participantId);
+
+    // ── NEW: for session details ──────────────────────────────────────────────
+
+    @Query("""
+        SELECT b FROM Booking b
+        JOIN FETCH b.user u
+        LEFT JOIN FETCH u.userInfo
+        WHERE b.session.id = :sessionId
+        AND b.isActive = true AND b.isDeleted = false
+    """)
+    List<Booking> findActiveBookingsBySessionId(@Param("sessionId") Long sessionId);
+
+    @Query("""
+        SELECT b FROM Booking b
+        JOIN FETCH b.user u
+        LEFT JOIN FETCH u.userInfo
+        WHERE b.session.id = :sessionId
+    """)
+    List<Booking> findAllBookingsBySessionId(@Param("sessionId") Long sessionId);
 }
