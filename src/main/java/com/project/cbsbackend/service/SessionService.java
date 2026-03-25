@@ -1,5 +1,6 @@
 package com.project.cbsbackend.service;
 
+import com.project.cbsbackend.dto.adminspecial.SessionAnalyticsResponse;
 import com.project.cbsbackend.dto.session.*;
 
 import java.util.List;
@@ -16,6 +17,8 @@ public interface SessionService {
     MySessionsResponse getMySessions(Long coachId);
     SessionDetailResponse getSessionDetails(Long requestingUserId, Long sessionId, boolean isAdmin);
     void deleteSession(Long requestingUserId, Long sessionId);
+
+    SessionAnalyticsResponse getSessionAnalytics(Long requestingUserId, Long sessionId);
 
 
 }

@@ -54,4 +54,27 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
         ORDER BY b.bookingTime DESC
     """)
     List<Booking> findAllBookingsByUserId(@Param("userId") Long userId);
+
+    long countBySessionId(Long sessionId);
+
+    long countBySessionIdAndIsActiveTrueAndIsDeletedFalse(Long sessionId);
+
+    long countBySessionIdAndIsActiveFalseAndIsDeletedFalse(Long sessionId);
+
+    long countBySessionIdAndIsDeletedTrue(Long sessionId);
+
+    List<Booking> findBySessionIdAndIsDeletedFalseOrderByBookingTimeDesc(Long sessionId);
+
+    @Query("""
+    SELECT b FROM Booking b
+    JOIN FETCH b.user u
+    LEFT JOIN FETCH u.userInfo
+    WHERE b.session.id = :sessionId
+    AND b.isDeleted = false
+    ORDER BY b.bookingTime DESC
+""")
+    List<Booking> findAllValidBookingsBySessionId(@Param("sessionId") Long sessionId);
+
+    long countBySessionIdAndIsDeletedFalse(Long sessionId);
+
 }

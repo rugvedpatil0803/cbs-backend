@@ -34,4 +34,22 @@ public interface FeedbackRepository extends JpaRepository<Feedback, Long> {
         ORDER BY f.createdAt DESC
     """)
     List<Feedback> findAllByUserId(@Param("userId") Long userId);
+
+    @Query("""
+           select avg(f.rating)
+           from Feedback f
+           where f.session.id = :sessionId
+             and f.isDeleted = false
+             and f.isActive = true
+           """)
+    Double findAverageRatingBySessionId(Long sessionId);
+
+    @Query("""
+           select count(f)
+           from Feedback f
+           where f.session.id = :sessionId
+             and f.isDeleted = false
+             and f.isActive = true
+           """)
+    long countActiveFeedbackBySessionId(Long sessionId);
 }

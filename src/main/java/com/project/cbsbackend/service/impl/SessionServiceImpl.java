@@ -1,6 +1,6 @@
 package com.project.cbsbackend.service.impl;
 
-import com.project.cbsbackend.dto.adminspecial.ParticipantResponse;
+import com.project.cbsbackend.dto.adminspecial.*;
 import com.project.cbsbackend.dto.session.*;
 import com.project.cbsbackend.entity.*;
 import com.project.cbsbackend.repository.*;
@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
+import java.math.BigDecimal;
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +23,7 @@ public class SessionServiceImpl implements SessionService {
     private final UserRoleLinkRepository userRoleLinkRepository;
     private final AvailabilityRepository availabilityRepository;
     private final BookingRepository bookingRepository;
+    private final FeedbackRepository feedbackRepository;
 
     @Override
     @Transactional
@@ -417,5 +419,146 @@ public class SessionServiceImpl implements SessionService {
             availability.setIsActive(false);
             availabilityRepository.save(availability);
         });
+    }
+
+    @Override
+    @Transactional
+    public SessionAnalyticsResponse getSessionAnalytics(Long requestingUserId, Long sessionId) {
+
+        // 1. Get roles
+        List<String> roles = userRoleLinkRepository.findByUserId(requestingUserId)
+                .stream()
+                .map(link -> link.getRole().getRoleName())
+                .toList();
+
+        boolean isAdmin = roles.contains("ADMIN");
+        boolean isCoach = roles.contains("COACH");
+
+        System.out.println("WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW");
+
+        if (!isAdmin && !isCoach) {
+            throw new RuntimeException("You are not allowed to view session analytics");
+        }
+
+        // 2. Fetch session
+        SessionTemplate session = sessionTemplateRepository.findById(sessionId)
+                .filter(s -> !s.getIsDeleted())
+                .orElseThrow(() -> new RuntimeException("Session not found"));
+
+        // 3. Coach can only see own session analytics
+        if (!isAdmin && !session.getCoach().getId().equals(requestingUserId)) {
+            throw new RuntimeException("You are not allowed to view this session analytics");
+        }
+
+        // 4. Availability
+        Availability availability = availabilityRepository.findBySessionId(sessionId)
+                .orElse(null);
+
+        int maxSeat = availability != null && availability.getMaxSeat() != null ? availability.getMaxSeat() : 0;
+        int occupiedSeats = availability != null && availability.getOccupiedSeats() != null ? availability.getOccupiedSeats() : 0;
+        int availableSeats = Math.max(maxSeat - occupiedSeats, 0);
+
+        BigDecimal occupancyPercentage = BigDecimal.ZERO;
+        if (maxSeat > 0) {
+            occupancyPercentage = BigDecimal.valueOf((occupiedSeats * 100.0) / maxSeat)
+                    .setScale(2, java.math.RoundingMode.HALF_UP);
+        }
+
+        // 5. Booking stats
+        long totalBookings = bookingRepository.countBySessionIdAndIsDeletedFalse(sessionId);
+        long activeBookings = bookingRepository.countBySessionIdAndIsActiveTrueAndIsDeletedFalse(sessionId);
+        long cancelledBookings = bookingRepository.countBySessionIdAndIsActiveFalseAndIsDeletedFalse(sessionId);
+        long deletedBookings = bookingRepository.countBySessionIdAndIsDeletedTrue(sessionId);
+
+        // 6. Participants - active bookings only
+        List<Booking> bookings = isAdmin
+                ? bookingRepository.findAllValidBookingsBySessionId(sessionId)
+                : bookingRepository.findActiveBookingsBySessionId(sessionId);
+
+        List<SessionAnalyticsResponse.ParticipantItem> participants = bookings.stream()
+                .filter(b -> Boolean.TRUE.equals(b.getIsActive()) && !Boolean.TRUE.equals(b.getIsDeleted()))
+                .map(booking -> {
+                    User user = booking.getUser();
+                    UserInfo userInfo = user.getUserInfo();
+
+                    return SessionAnalyticsResponse.ParticipantItem.builder()
+                            .userId(user.getId())
+                            .name(user.getFirstName() + " " + user.getLastName())
+                            .email(user.getEmail())
+                            .contactNumber(userInfo != null ? userInfo.getContactNumber() : null)
+                            .bookingTime(booking.getBookingTime())
+                            .build();
+                })
+                .toList();
+
+        // 7. Feedback stats
+        Double avgRating = feedbackRepository.findAverageRatingBySessionId(sessionId);
+        BigDecimal averageRating = avgRating != null
+                ? BigDecimal.valueOf(avgRating).setScale(1, java.math.RoundingMode.HALF_UP)
+                : null;
+
+        // 8. Session status
+        String status = resolveSessionStatus(session);
+
+        // 9. Build response
+        return SessionAnalyticsResponse.builder()
+                .session(SessionAnalyticsResponse.SessionInfo.builder()
+                        .sessionId(session.getId())
+                        .name(session.getName())
+                        .description(session.getDescription())
+                        .coach(session.getCoach().getFirstName() + " " + session.getCoach().getLastName())
+                        .schedule(SessionAnalyticsResponse.ScheduleInfo.builder()
+                                .startDay(session.getStartDay())
+                                .endDay(session.getEndDay())
+                                .startTime(session.getStartTime())
+                                .endTime(session.getEndTime())
+                                .build())
+                        .totalSeats(session.getNoOfSeats())
+                        .build())
+                .availability(SessionAnalyticsResponse.AvailabilityInfo.builder()
+                        .maxSeat(maxSeat)
+                        .occupiedSeats(occupiedSeats)
+                        .availableSeats(availableSeats)
+                        .occupancyPercentage(occupancyPercentage)
+                        .build())
+                .bookingStats(SessionAnalyticsResponse.BookingStats.builder()
+                        .totalBookings(totalBookings)
+                        .activeBookings(activeBookings)
+                        .cancelledBookings(cancelledBookings)
+                        .deletedBookings(deletedBookings)
+                        .build())
+                .participants(SessionAnalyticsResponse.ParticipantsInfo.builder()
+                        .totalParticipants((long) participants.size())
+                        .allParticipants(participants)
+                        .build())
+                .feedbackStats(SessionAnalyticsResponse.FeedbackStats.builder()
+                        .averageRating(averageRating)
+                        .build())
+                .status(status)
+                .build();
+    }
+    private String resolveSessionStatus(SessionTemplate session) {
+        LocalDate today = LocalDate.now();
+        LocalTime now = LocalTime.now();
+
+        if (session.getStartDay() != null && today.isBefore(session.getStartDay())) {
+            return "UPCOMING";
+        }
+
+        if (session.getEndDay() != null && today.isAfter(session.getEndDay())) {
+            return "COMPLETED";
+        }
+
+        if (session.getStartDay() != null && session.getEndDay() != null) {
+            if (today.isEqual(session.getStartDay()) && session.getStartTime() != null && now.isBefore(session.getStartTime())) {
+                return "UPCOMING";
+            }
+
+            if (today.isEqual(session.getEndDay()) && session.getEndTime() != null && now.isAfter(session.getEndTime())) {
+                return "COMPLETED";
+            }
+        }
+
+        return "ONGOING";
     }
 }

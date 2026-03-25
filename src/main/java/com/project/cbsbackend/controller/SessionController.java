@@ -2,6 +2,7 @@ package com.project.cbsbackend.controller;
 
 import com.project.cbsbackend.config.JwtUtil;
 import com.project.cbsbackend.dto.*;
+import com.project.cbsbackend.dto.adminspecial.SessionAnalyticsResponse;
 import com.project.cbsbackend.dto.session.*;
 import com.project.cbsbackend.service.SessionService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -258,6 +259,42 @@ public class SessionController {
                             .status("success")
                             .message("Session deleted successfully")
                             .data(null)
+                            .build()
+            );
+        } catch (RuntimeException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.builder()
+                            .status("error")
+                            .message(ex.getMessage())
+                            .data(null)
+                            .build()
+                    );
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.builder()
+                            .status("error")
+                            .message("Something went wrong")
+                            .data(null)
+                            .build()
+                    );
+        }
+    }
+
+    @GetMapping("/analytics/{sessionId}")
+    public ResponseEntity<ApiResponse<?>> getSessionAnalytics(
+            @PathVariable Long sessionId,
+            HttpServletRequest httpRequest) {
+        try {
+            String token = httpRequest.getHeader("Authorization").substring(7);
+            Long requestingUserId = jwtUtil.extractUserId(token);
+
+            SessionAnalyticsResponse data = sessionService.getSessionAnalytics(requestingUserId, sessionId);
+
+            return ResponseEntity.ok(
+                    ApiResponse.builder()
+                            .status("success")
+                            .message("Session analytics fetched successfully")
+                            .data(data)
                             .build()
             );
         } catch (RuntimeException ex) {
