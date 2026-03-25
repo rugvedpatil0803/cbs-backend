@@ -45,4 +45,13 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
         WHERE b.session.id = :sessionId
     """)
     List<Booking> findAllBookingsBySessionId(@Param("sessionId") Long sessionId);
+
+    @Query("""
+        SELECT b FROM Booking b
+        JOIN FETCH b.session s
+        JOIN FETCH s.coach c
+        WHERE b.user.id = :userId
+        ORDER BY b.bookingTime DESC
+    """)
+    List<Booking> findAllBookingsByUserId(@Param("userId") Long userId);
 }

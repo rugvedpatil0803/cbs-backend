@@ -1,4 +1,4 @@
-package com.project.cbsbackend.dto;
+package com.project.cbsbackend.dto.userprofile;
 
 import lombok.Data;
 

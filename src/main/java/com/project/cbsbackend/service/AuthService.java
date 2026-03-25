@@ -1,9 +1,9 @@
 package com.project.cbsbackend.service;
 
-import com.project.cbsbackend.dto.LoginRequest;
-import com.project.cbsbackend.dto.LoginResponse;
-import com.project.cbsbackend.dto.RegisterRequest;
-import com.project.cbsbackend.dto.ResetPasswordRequest;
+import com.project.cbsbackend.dto.login.LoginRequest;
+import com.project.cbsbackend.dto.login.LoginResponse;
+import com.project.cbsbackend.dto.userprofile.RegisterRequest;
+import com.project.cbsbackend.dto.resetpass.ResetPasswordRequest;
 
 
 public interface AuthService {

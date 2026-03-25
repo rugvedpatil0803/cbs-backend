@@ -1,8 +1,6 @@
-package com.project.cbsbackend.dto;
+package com.project.cbsbackend.dto.booking;
 
 import lombok.Data;
-
-import java.time.LocalDateTime;
 
 @Data
 public class UpdateBookingResponse {

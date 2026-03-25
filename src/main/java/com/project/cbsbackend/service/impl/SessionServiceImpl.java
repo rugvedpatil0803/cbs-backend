@@ -1,6 +1,7 @@
 package com.project.cbsbackend.service.impl;
 
-import com.project.cbsbackend.dto.*;
+import com.project.cbsbackend.dto.adminspecial.ParticipantResponse;
+import com.project.cbsbackend.dto.session.*;
 import com.project.cbsbackend.entity.*;
 import com.project.cbsbackend.repository.*;
 import com.project.cbsbackend.service.SessionService;

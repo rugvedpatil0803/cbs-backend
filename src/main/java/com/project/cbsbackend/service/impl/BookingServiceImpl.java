@@ -1,8 +1,8 @@
 package com.project.cbsbackend.service.impl;
 
-import com.project.cbsbackend.dto.CreateBookingRequest;
-import com.project.cbsbackend.dto.CreateBookingResponse;
-import com.project.cbsbackend.dto.UserBookingResponse;
+import com.project.cbsbackend.dto.booking.CreateBookingRequest;
+import com.project.cbsbackend.dto.booking.CreateBookingResponse;
+import com.project.cbsbackend.dto.booking.UserBookingResponse;
 import com.project.cbsbackend.entity.Availability;
 import com.project.cbsbackend.entity.Booking;
 import com.project.cbsbackend.entity.SessionTemplate;

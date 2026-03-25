@@ -2,9 +2,9 @@
 
     import com.project.cbsbackend.config.JwtUtil;
     import com.project.cbsbackend.dto.ApiResponse;
-    import com.project.cbsbackend.dto.CreateBookingRequest;
-    import com.project.cbsbackend.dto.CreateBookingResponse;
-    import com.project.cbsbackend.dto.UserBookingResponse;
+    import com.project.cbsbackend.dto.booking.CreateBookingRequest;
+    import com.project.cbsbackend.dto.booking.CreateBookingResponse;
+    import com.project.cbsbackend.dto.booking.UserBookingResponse;
     import com.project.cbsbackend.service.BookingService;
     import jakarta.servlet.http.HttpServletRequest;
     import lombok.RequiredArgsConstructor;

@@ -2,8 +2,8 @@ package com.project.cbsbackend.controller;
 
 import com.project.cbsbackend.config.JwtUtil;
 import com.project.cbsbackend.dto.ApiResponse;
-import com.project.cbsbackend.dto.CreateFeedbackRequest;
-import com.project.cbsbackend.dto.FeedbackResponse;
+import com.project.cbsbackend.dto.feedback.CreateFeedbackRequest;
+import com.project.cbsbackend.dto.feedback.FeedbackResponse;
 import com.project.cbsbackend.service.FeedbackService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;

@@ -1,8 +1,8 @@
 package com.project.cbsbackend.service;
 
-import com.project.cbsbackend.dto.CreateBookingRequest;
-import com.project.cbsbackend.dto.CreateBookingResponse;
-import com.project.cbsbackend.dto.UserBookingResponse;
+import com.project.cbsbackend.dto.booking.CreateBookingRequest;
+import com.project.cbsbackend.dto.booking.CreateBookingResponse;
+import com.project.cbsbackend.dto.booking.UserBookingResponse;
 
 import java.util.List;
 

@@ -1,6 +1,6 @@
 package com.project.cbsbackend.service;
 
-import com.project.cbsbackend.dto.*;
+import com.project.cbsbackend.dto.session.*;
 
 import java.util.List;
 

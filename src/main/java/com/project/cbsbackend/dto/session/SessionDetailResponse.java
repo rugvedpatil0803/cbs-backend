@@ -1,5 +1,6 @@
-package com.project.cbsbackend.dto;
+package com.project.cbsbackend.dto.session;
 
+import com.project.cbsbackend.dto.adminspecial.ParticipantResponse;
 import lombok.*;
 import java.time.LocalDate;
 import java.time.LocalTime;

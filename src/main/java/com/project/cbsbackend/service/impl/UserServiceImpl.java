@@ -1,11 +1,11 @@
 package com.project.cbsbackend.service.impl;
 
-import com.project.cbsbackend.dto.UpdateProfileRequest;
-import com.project.cbsbackend.dto.UpdateProfileResponse;
-import com.project.cbsbackend.dto.UserSummaryResponse;
-import com.project.cbsbackend.entity.User;
-import com.project.cbsbackend.entity.UserInfo;
-import com.project.cbsbackend.entity.UserRoleLink;
+import com.project.cbsbackend.dto.adminspecial.UserBookingListResponse;
+import com.project.cbsbackend.dto.userprofile.UpdateProfileRequest;
+import com.project.cbsbackend.dto.userprofile.UpdateProfileResponse;
+import com.project.cbsbackend.dto.adminspecial.UserSummaryResponse;
+import com.project.cbsbackend.entity.*;
+import com.project.cbsbackend.repository.BookingRepository;
 import com.project.cbsbackend.repository.UserInfoRepository;
 import com.project.cbsbackend.repository.UserRoleLinkRepository;  // ← ADD
 import com.project.cbsbackend.repository.UserRepository;
@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
 
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -26,6 +27,8 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final UserInfoRepository userInfoRepository;
     private final UserRoleLinkRepository userRoleLinkRepository;
+    private final BookingRepository bookingRepository;
+
 
     @Override
     @Transactional
@@ -106,9 +109,6 @@ public class UserServiceImpl implements UserService {
                 .filter(u -> !u.getIsDeleted())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        if (!user.getIsActive()) {
-            throw new RuntimeException("User is inactive");
-        }
 
         // ── 3. Fetch user info ────────────────────────────────────────
         UserInfo userInfo = userInfoRepository.findByUserId(targetUserId)
@@ -164,5 +164,87 @@ public class UserServiceImpl implements UserService {
         }
 
         return result;
+    }
+
+    @Override
+    @Transactional
+    public void deactivateUser(Long requestingUserId, Long targetUserId) {
+
+        List<String> roles = userRoleLinkRepository.findByUserId(requestingUserId)
+                .stream()
+                .map(link -> link.getRole().getRoleName())
+                .toList();
+
+        if (!roles.contains("ADMIN")) {
+            throw new RuntimeException("You are not allowed to perform this action");
+        }
+
+        User targetUser = userRepository.findById(targetUserId)
+                .filter(u -> !u.getIsDeleted())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        boolean currentStatus = targetUser.getIsActive();
+        targetUser.setIsActive(!currentStatus);
+
+        userRepository.save(targetUser);
+    }
+
+    @Override
+    public List<UserBookingListResponse> getUserBookings(Long requestingUserId, Long targetUserId) {
+
+        // ── 1. Get roles of requesting user ───────────────────────
+        List<String> roles = userRoleLinkRepository.findByUserId(requestingUserId)
+                .stream()
+                .map(link -> link.getRole().getRoleName())
+                .toList();
+
+        boolean isAdmin = roles.contains("ADMIN");
+
+        // ── 2. Non-admin can only view their own bookings ─────────
+        if (!isAdmin && !requestingUserId.equals(targetUserId)) {
+            throw new RuntimeException("You are not allowed to view these bookings");
+        }
+
+        // ── 3. Verify target user exists ──────────────────────────
+        userRepository.findById(targetUserId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // ── 4. Fetch all bookings ─────────────────────────────────
+        List<Booking> bookings = bookingRepository.findAllBookingsByUserId(targetUserId);
+
+        // ── 5. Formatters ─────────────────────────────────────────
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a");
+        DateTimeFormatter dateFormatter     = DateTimeFormatter.ofPattern("dd MMM yyyy");
+        DateTimeFormatter timeFormatter     = DateTimeFormatter.ofPattern("hh:mm a");
+
+        // ── 6. Map and return ─────────────────────────────────────
+        return bookings.stream()
+                .map(booking -> {
+                    SessionTemplate session = booking.getSession();
+                    User coach = session.getCoach();
+
+                    return UserBookingListResponse.builder()
+                            .bookingId(booking.getId())
+                            .bookingTime(booking.getBookingTime() != null
+                                    ? booking.getBookingTime().format(dateTimeFormatter) : null)
+                            .sessionId(session.getId())
+                            .sessionName(session.getName())
+                            .sessionDescription(session.getDescription())
+                            .startDay(session.getStartDay() != null
+                                    ? session.getStartDay().format(dateFormatter) : null)
+                            .endDay(session.getEndDay() != null
+                                    ? session.getEndDay().format(dateFormatter) : null)
+                            .startTime(session.getStartTime() != null
+                                    ? session.getStartTime().format(timeFormatter) : null)
+                            .endTime(session.getEndTime() != null
+                                    ? session.getEndTime().format(timeFormatter) : null)
+                            .metaData(session.getMetaData())
+                            .coachId(coach.getId())
+                            .coachName(coach.getFirstName() + " " + coach.getLastName())
+                            .isActive(booking.getIsActive())
+                            .isDeleted(booking.getIsDeleted())
+                            .build();
+                })
+                .toList();
     }
 }

@@ -1,7 +1,7 @@
 package com.project.cbsbackend.service.impl;
 
-import com.project.cbsbackend.dto.CreateFeedbackRequest;
-import com.project.cbsbackend.dto.FeedbackResponse;
+import com.project.cbsbackend.dto.feedback.CreateFeedbackRequest;
+import com.project.cbsbackend.dto.feedback.FeedbackResponse;
 import com.project.cbsbackend.entity.Feedback;
 import com.project.cbsbackend.entity.SessionTemplate;
 import com.project.cbsbackend.entity.User;

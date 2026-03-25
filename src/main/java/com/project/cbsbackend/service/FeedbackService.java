@@ -1,7 +1,7 @@
 package com.project.cbsbackend.service;
 
-import com.project.cbsbackend.dto.CreateFeedbackRequest;
-import com.project.cbsbackend.dto.FeedbackResponse;
+import com.project.cbsbackend.dto.feedback.CreateFeedbackRequest;
+import com.project.cbsbackend.dto.feedback.FeedbackResponse;
 
 import java.util.List;
 

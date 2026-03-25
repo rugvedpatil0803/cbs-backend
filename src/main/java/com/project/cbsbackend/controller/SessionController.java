@@ -2,6 +2,7 @@ package com.project.cbsbackend.controller;
 
 import com.project.cbsbackend.config.JwtUtil;
 import com.project.cbsbackend.dto.*;
+import com.project.cbsbackend.dto.session.*;
 import com.project.cbsbackend.service.SessionService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
