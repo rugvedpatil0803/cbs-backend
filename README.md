@@ -102,6 +102,10 @@ The server will start at:
 http://localhost:8080
 ```
 
+
+<img width="2816" height="1536" alt="Gemini_Generated_Image_d2a4mvd2a4mvd2a4" src="https://github.com/user-attachments/assets/e928e2a6-4d68-43e8-8b2b-f22dc8d9dc3a" />
+
+
 ---
 
 
