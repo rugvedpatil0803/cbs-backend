@@ -54,7 +54,6 @@ public class FeedbackController {
         }
     }
 
-    // Get all feedback for a particular session — open to ADMIN and COACH
     @GetMapping("/session/{sessionId}")
     public ResponseEntity<ApiResponse<?>> getFeedbackBySession(
             @PathVariable Long sessionId,
@@ -84,7 +83,6 @@ public class FeedbackController {
         }
     }
 
-    // Get all feedback by a particular user — participant sees own, admin can pass ?userId=
     @GetMapping("/user")
     public ResponseEntity<ApiResponse<?>> getFeedbackByUser(
             @RequestParam(required = false) Long userId,

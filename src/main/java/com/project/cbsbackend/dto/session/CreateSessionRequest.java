@@ -15,6 +15,5 @@ public class CreateSessionRequest {
     private Integer noOfSeats;
     private String metaData;
 
-    // Only used when Admin creates session for a specific coach
     private Long coachId;
 }

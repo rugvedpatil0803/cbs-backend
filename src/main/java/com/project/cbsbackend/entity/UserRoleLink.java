@@ -22,12 +22,10 @@ public class UserRoleLink {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // 🔗 Many links -> One User
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    // 🔗 Many links -> One Role
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "role_id", nullable = false)
     private Role role;
@@ -44,7 +42,6 @@ public class UserRoleLink {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    // Auto timestamps
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();

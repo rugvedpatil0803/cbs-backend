@@ -9,7 +9,6 @@ import java.util.List;
 
 public interface ApiRoleLinkRepository extends JpaRepository<ApiRoleLink, Long> {
 
-    // Get all active API permissions for a list of role IDs
     @Query("SELECT a FROM ApiRoleLink a WHERE a.role.id IN :roleIds AND a.isActive = true AND a.isDeleted = false")
     List<ApiRoleLink> findActiveByRoleIds(@Param("roleIds") List<Long> roleIds);
 }

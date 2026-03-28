@@ -34,7 +34,6 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UpdateProfileResponse updateProfile(Long requestingUserId, Long targetUserId, UpdateProfileRequest request) {
 
-        // ── 1. Security check ─────────────────────────────────────────
         List<String> roles = userRoleLinkRepository.findByUserId(requestingUserId)
                 .stream()
                 .map(link -> link.getRole().getRoleName())
@@ -46,7 +45,6 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException("You are not allowed to update another user's profile");
         }
 
-        // ── 2. Fetch target user ──────────────────────────────────────
         User user = userRepository.findById(targetUserId)
                 .filter(u -> !u.getIsDeleted())
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -55,13 +53,11 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException("User is inactive");
         }
 
-        // ── 3. Update tbl_user fields ─────────────────────────────────
         if (request.getFirstName() != null) user.setFirstName(request.getFirstName());
         if (request.getLastName()  != null) user.setLastName(request.getLastName());
 
         userRepository.save(user);
 
-        // ── 4. Update tbl_user_info fields ────────────────────────────
         UserInfo userInfo = userInfoRepository.findByUserId(targetUserId)
                 .orElseThrow(() -> new RuntimeException("User info not found"));
 
@@ -74,7 +70,6 @@ public class UserServiceImpl implements UserService {
 
         userInfoRepository.save(userInfo);
 
-        // ── 5. Return response ────────────────────────────────────────
         return UpdateProfileResponse.builder()
                 .userId(user.getId())
                 .firstName(user.getFirstName())
@@ -92,7 +87,6 @@ public class UserServiceImpl implements UserService {
     @Override
     public UpdateProfileResponse getProfile(Long requestingUserId, Long targetUserId) {
 
-        // ── 1. Security check ─────────────────────────────────────────
         List<String> roles = userRoleLinkRepository.findByUserId(requestingUserId)
                 .stream()
                 .map(link -> link.getRole().getRoleName())
@@ -104,17 +98,14 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException("You are not allowed to view another user's profile");
         }
 
-        // ── 2. Fetch target user ──────────────────────────────────────
         User user = userRepository.findById(targetUserId)
                 .filter(u -> !u.getIsDeleted())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
 
-        // ── 3. Fetch user info ────────────────────────────────────────
         UserInfo userInfo = userInfoRepository.findByUserId(targetUserId)
                 .orElseThrow(() -> new RuntimeException("User info not found"));
 
-        // ── 4. Return response ────────────────────────────────────────
         return UpdateProfileResponse.builder()
                 .userId(user.getId())
                 .firstName(user.getFirstName())
@@ -132,7 +123,6 @@ public class UserServiceImpl implements UserService {
     @Override
     public Map<String, List<UserSummaryResponse>> getUsersGroupedByRole(Long requestingUserId) {
 
-        // ── 1. Verify requesting user is ADMIN ────────────────────
         List<String> roles = userRoleLinkRepository.findByUserId(requestingUserId)
                 .stream()
                 .map(link -> link.getRole().getRoleName())
@@ -142,10 +132,8 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException("You are not allowed to access this resource");
         }
 
-        // ── 2. Fetch all active role links ────────────────────────
         List<UserRoleLink> activeRoleLinks = userRoleLinkRepository.findAllActiveRoleLinks();
 
-        // ── 3. Group by role name ─────────────────────────────────
         Map<String, List<UserSummaryResponse>> result = new LinkedHashMap<>();
 
         for (UserRoleLink link : activeRoleLinks) {
@@ -192,7 +180,6 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<UserBookingListResponse> getUserBookings(Long requestingUserId, Long targetUserId) {
 
-        // ── 1. Get roles of requesting user ───────────────────────
         List<String> roles = userRoleLinkRepository.findByUserId(requestingUserId)
                 .stream()
                 .map(link -> link.getRole().getRoleName())
@@ -200,24 +187,19 @@ public class UserServiceImpl implements UserService {
 
         boolean isAdmin = roles.contains("ADMIN");
 
-        // ── 2. Non-admin can only view their own bookings ─────────
         if (!isAdmin && !requestingUserId.equals(targetUserId)) {
             throw new RuntimeException("You are not allowed to view these bookings");
         }
 
-        // ── 3. Verify target user exists ──────────────────────────
         userRepository.findById(targetUserId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // ── 4. Fetch all bookings ─────────────────────────────────
         List<Booking> bookings = bookingRepository.findAllBookingsByUserId(targetUserId);
 
-        // ── 5. Formatters ─────────────────────────────────────────
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a");
         DateTimeFormatter dateFormatter     = DateTimeFormatter.ofPattern("dd MMM yyyy");
         DateTimeFormatter timeFormatter     = DateTimeFormatter.ofPattern("hh:mm a");
 
-        // ── 6. Map and return ─────────────────────────────────────
         return bookings.stream()
                 .map(booking -> {
                     SessionTemplate session = booking.getSession();

@@ -21,11 +21,9 @@ public class ApiRoleLink {
     @JoinColumn(name = "role_id", nullable = false)
     private Role role;
 
-    // e.g. /api/users/**, /auth/login
     @Column(name = "api_url", nullable = false)
     private String apiUrl;
 
-    // e.g. "GET,POST,DELETE"
     @Column(name = "allowed_actions", nullable = false)
     private String allowedActions;
 

@@ -27,7 +27,6 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     """)
     List<Booking> findAllActiveBookingsByUserId(@Param("participantId") Long participantId);
 
-    // ── NEW: for session details ──────────────────────────────────────────────
 
     @Query("""
         SELECT b FROM Booking b

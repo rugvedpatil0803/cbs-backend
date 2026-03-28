@@ -25,7 +25,6 @@ public class SessionTemplate {
     @Column(name = "description")
     private String description;
 
-    // 🔗 Coach (User)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "coach_id", nullable = false)
     private User coach;
@@ -45,7 +44,6 @@ public class SessionTemplate {
     @Column(name = "no_of_seats")
     private Integer noOfSeats;
 
-    // Flexible JSON/string field
     @Column(name = "meta_data", columnDefinition = "TEXT")
     private String metaData;
 
@@ -61,7 +59,6 @@ public class SessionTemplate {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    // Auto timestamps
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();

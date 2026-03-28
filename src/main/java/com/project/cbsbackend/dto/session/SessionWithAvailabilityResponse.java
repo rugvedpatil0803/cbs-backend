@@ -22,8 +22,7 @@ public class SessionWithAvailabilityResponse {
     private Integer noOfSeats;
     private String metaData;
 
-    // Availability fields
     private Integer maxSeat;
     private Integer occupiedSeats;
-    private Integer availableSeats; // maxSeat - occupiedSeats
+    private Integer availableSeats;
 }

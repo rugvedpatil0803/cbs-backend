@@ -35,7 +35,6 @@ public class Role {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    // Auto timestamps
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();

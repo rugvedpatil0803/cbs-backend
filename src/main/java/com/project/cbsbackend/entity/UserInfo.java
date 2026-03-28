@@ -17,7 +17,6 @@ public class UserInfo {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // 🔗 One-to-One with User
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
@@ -28,7 +27,6 @@ public class UserInfo {
     @Column(name = "address")
     private String address;
 
-    // Participant fields
     @Column(name = "motivation")
     private String motivation;
 
@@ -38,7 +36,6 @@ public class UserInfo {
     @Column(name = "preferred_session_duration")
     private Integer preferredSessionDuration;
 
-    // Coach field
     @Column(name = "bio")
     private String bio;
 
@@ -54,7 +51,6 @@ public class UserInfo {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    // Auto timestamps
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();

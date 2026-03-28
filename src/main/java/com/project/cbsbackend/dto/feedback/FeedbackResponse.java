@@ -11,11 +11,9 @@ import java.time.LocalDateTime;
 public class FeedbackResponse {
     private Long feedbackId;
 
-    // Session info
     private Long sessionId;
     private String sessionName;
 
-    // User info
     private Long userId;
     private String userName;
 

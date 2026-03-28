@@ -24,11 +24,9 @@ public class SessionDetailResponse {
     private Integer noOfSeats;
     private String metaData;
 
-    // From availability
     private Integer maxSeat;
     private Integer occupiedSeats;
     private Integer availableSeats;
 
-    // Participants
     private List<ParticipantResponse> participants;
 }

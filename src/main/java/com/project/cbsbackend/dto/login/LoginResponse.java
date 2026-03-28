@@ -9,7 +9,7 @@ import java.util.List;
 public class LoginResponse {
     private List<String> roles;
     private String token;
-    private String refreshToken;   // ← add this
+    private String refreshToken;
     private Long userId;
     private String firstName;
     private String lastName;

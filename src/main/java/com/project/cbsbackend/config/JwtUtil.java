@@ -44,11 +44,11 @@ public class JwtUtil {
     }
 
     private Claims extractAllClaims(String token) {
-        return Jwts.parser()                  // ← parserBuilder() removed in 0.12+
-                .verifyWith(getSignKey())      // ← replaces setSigningKey()
+        return Jwts.parser()
+                .verifyWith(getSignKey())
                 .build()
-                .parseSignedClaims(token)      // ← replaces parseClaimsJws()
-                .getPayload();                 // ← replaces getBody()
+                .parseSignedClaims(token)
+                .getPayload();
     }
 
     public String extractEmail(String token)       { return extractAllClaims(token).getSubject(); }

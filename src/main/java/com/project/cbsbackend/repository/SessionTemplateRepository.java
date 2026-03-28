@@ -10,7 +10,6 @@ import java.util.List;
 
 public interface SessionTemplateRepository extends JpaRepository<SessionTemplate, Long> {
 
-    // Upcoming: startDay is strictly in the future
     @Query("SELECT s FROM SessionTemplate s JOIN FETCH s.coach WHERE s.isDeleted = false AND s.isActive = true AND s.startDay > :today")
     List<SessionTemplate> findUpcomingSessions(@Param("today") LocalDate today);
 

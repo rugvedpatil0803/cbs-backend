@@ -28,7 +28,6 @@ public class SessionController {
             @RequestBody CreateSessionRequest request,
             HttpServletRequest httpRequest) {
         try {
-            // Get requesting userId from token
             String token = httpRequest.getHeader("Authorization").substring(7);
             Long requestingUserId = jwtUtil.extractUserId(token);
 

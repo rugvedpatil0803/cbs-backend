@@ -29,7 +29,6 @@ public class UserController {
             @RequestBody UpdateProfileRequest request,
             jakarta.servlet.http.HttpServletRequest httpRequest) {
         try {
-            // Get requesting user's ID from token
             String authHeader = httpRequest.getHeader("Authorization");
             String token = authHeader.substring(7);
             Long requestingUserId = jwtUtil.extractUserId(token);
@@ -66,7 +65,6 @@ public class UserController {
             @PathVariable Long userId,
             jakarta.servlet.http.HttpServletRequest httpRequest) {
         try {
-            // Get requesting user's ID from token
             String authHeader = httpRequest.getHeader("Authorization");
             String token = authHeader.substring(7);
             Long requestingUserId = jwtUtil.extractUserId(token);

@@ -22,22 +22,18 @@ public class Booking {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // 🔗 Session
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "session_id", nullable = false)
     private SessionTemplate session;
 
-    // 🔗 Availability (seat tracking)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "availability_id", nullable = false)
     private Availability availability;
 
-    // 🔗 Participant (User)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    // 🔗 Coach snapshot (VERY IMPORTANT)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "coach_id", nullable = false)
     private User coach;
@@ -57,7 +53,6 @@ public class Booking {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    // Auto timestamps
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();

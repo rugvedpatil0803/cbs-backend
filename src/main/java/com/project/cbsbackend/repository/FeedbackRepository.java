@@ -10,10 +10,8 @@ import java.util.Optional;
 
 public interface FeedbackRepository extends JpaRepository<Feedback, Long> {
 
-    // Check duplicate
     boolean existsByUserIdAndSessionIdAndIsDeletedFalse(Long userId, Long sessionId);
 
-    // Get all feedback for a particular session
     @Query("""
         SELECT f FROM Feedback f
         JOIN FETCH f.user u
@@ -24,7 +22,6 @@ public interface FeedbackRepository extends JpaRepository<Feedback, Long> {
     """)
     List<Feedback> findAllBySessionId(@Param("sessionId") Long sessionId);
 
-    // Get all feedback by a particular user
     @Query("""
         SELECT f FROM Feedback f
         JOIN FETCH f.user u

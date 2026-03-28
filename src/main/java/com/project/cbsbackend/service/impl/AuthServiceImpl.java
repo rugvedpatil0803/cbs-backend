@@ -36,21 +36,17 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public void registerUser(RegisterRequest dto) {
 
-        // 0. Basic validation
         if (dto.getEmail() == null || dto.getPassword() == null || dto.getRole() == null) {
             throw new RuntimeException("Email, Password and Role are required");
         }
 
-        // 1. Check email exists
         if (userRepository.existsByEmail(dto.getEmail())) {
             throw new RuntimeException("Email already exists");
         }
 
-        // 2. Fetch Role (safe handling)
         Role role = roleRepository.findByRoleName(dto.getRole().trim().toUpperCase())
                 .orElseThrow(() -> new RuntimeException("Invalid role"));
 
-        // 3. Create User
         User user = User.builder()
                 .firstName(dto.getFirstName())
                 .lastName(dto.getLastName())
@@ -58,12 +54,11 @@ public class AuthServiceImpl implements AuthService {
                 .passwordHash(passwordEncoder.encode(dto.getPassword()))
                 .isActive(true)
                 .isDeleted(false)
-                .isSuperuser("ADMIN".equalsIgnoreCase(role.getRoleName())) // auto set if admin
+                .isSuperuser("ADMIN".equalsIgnoreCase(role.getRoleName()))
                 .build();
 
         userRepository.save(user);
 
-        // 4. Create UserInfo
         UserInfo userInfo = UserInfo.builder()
                 .user(user)
                 .contactNumber(dto.getContactNumber())
@@ -78,7 +73,6 @@ public class AuthServiceImpl implements AuthService {
 
         userInfoRepository.save(userInfo);
 
-        // 5. Create UserRoleLink
         UserRoleLink link = UserRoleLink.builder()
                 .user(user)
                 .role(role)
@@ -137,20 +131,16 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public void requestOtp(String email) {
 
-        // Reuse your existing method
         checkEmail(email); // throws if invalid
 
-        // Static OTP
         String otp = "123456";
 
-        // For testing (since no email service)
         System.out.println("OTP for " + email + ": " + otp);
     }
 
     @Override
     public void resetPassword(ResetPasswordRequest request) {
 
-        // 1. Validate email
         User user = userRepository.findByEmail(request.getEmail())
                 .filter(u -> !u.getIsDeleted())
                 .orElseThrow(() -> new RuntimeException("Invalid email"));
@@ -159,12 +149,10 @@ public class AuthServiceImpl implements AuthService {
             throw new RuntimeException("User is inactive");
         }
 
-        // 2. Validate OTP (static)
         if (!"123456".equals(request.getOtp())) {
             throw new RuntimeException("Invalid OTP");
         }
 
-        // 3. Update password
         user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
     }

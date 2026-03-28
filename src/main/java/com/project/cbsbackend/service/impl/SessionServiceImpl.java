@@ -29,7 +29,6 @@ public class SessionServiceImpl implements SessionService {
     @Transactional
     public CreateSessionResponse createSession(Long requestingUserId, CreateSessionRequest request) {
 
-        // ── 1. Get roles of requesting user ───────────────────────────
         List<String> roles = userRoleLinkRepository.findByUserId(requestingUserId)
                 .stream()
                 .map(link -> link.getRole().getRoleName())
@@ -38,12 +37,10 @@ public class SessionServiceImpl implements SessionService {
         boolean isAdmin = roles.contains("ADMIN");
         boolean isCoach = roles.contains("COACH");
 
-        // ── 2. Only COACH or ADMIN allowed ────────────────────────────
         if (!isAdmin && !isCoach) {
             throw new RuntimeException("You are not allowed to create a session");
         }
 
-        // ── 3. Determine coachId ──────────────────────────────────────
         Long coachId;
         if (isAdmin && request.getCoachId() != null) {
             coachId = request.getCoachId();
@@ -51,7 +48,6 @@ public class SessionServiceImpl implements SessionService {
             coachId = requestingUserId;
         }
 
-        // ── 4. Validate basic fields ──────────────────────────────────
         if (request.getName() == null || request.getName().isBlank()) {
             throw new RuntimeException("Session name is required");
         }
@@ -71,12 +67,10 @@ public class SessionServiceImpl implements SessionService {
             throw new RuntimeException("Number of seats must be greater than 0");
         }
 
-        // ── 5. Fetch coach user ───────────────────────────────────────
         User coach = userRepository.findById(coachId)
                 .filter(u -> !u.getIsDeleted() && u.getIsActive())
                 .orElseThrow(() -> new RuntimeException("Coach not found"));
 
-        // ── 6. Verify the target user is actually a COACH ─────────────
         List<String> coachRoles = userRoleLinkRepository.findByUserId(coachId)
                 .stream()
                 .map(link -> link.getRole().getRoleName())
@@ -86,7 +80,6 @@ public class SessionServiceImpl implements SessionService {
             throw new RuntimeException("Target user is not a coach");
         }
 
-        // ── 7. Create and save session ────────────────────────────────
         SessionTemplate session = SessionTemplate.builder()
                 .name(request.getName())
                 .description(request.getDescription())
@@ -103,7 +96,6 @@ public class SessionServiceImpl implements SessionService {
 
         sessionTemplateRepository.save(session);
 
-        // ── 8. Auto create availability entry ─────────────────────────
         Availability availability = Availability.builder()
                 .session(session)
                 .maxSeat(request.getNoOfSeats())
@@ -114,7 +106,6 @@ public class SessionServiceImpl implements SessionService {
 
         availabilityRepository.save(availability);
 
-        // ── 9. Return response ────────────────────────────────────────
         return CreateSessionResponse.builder()
                 .id(session.getId())
                 .name(session.getName())
@@ -134,7 +125,6 @@ public class SessionServiceImpl implements SessionService {
     @Transactional
     public CreateSessionResponse updateSession(Long requestingUserId, Long sessionId, UpdateSessionRequest request) {
 
-        // ── 1. Get roles of requesting user ───────────────────────────
         List<String> roles = userRoleLinkRepository.findByUserId(requestingUserId)
                 .stream()
                 .map(link -> link.getRole().getRoleName())
@@ -143,22 +133,18 @@ public class SessionServiceImpl implements SessionService {
         boolean isAdmin = roles.contains("ADMIN");
         boolean isCoach = roles.contains("COACH");
 
-        // ── 2. Only COACH or ADMIN allowed ────────────────────────────
         if (!isAdmin && !isCoach) {
             throw new RuntimeException("You are not allowed to update a session");
         }
 
-        // ── 3. Fetch session ──────────────────────────────────────────
         SessionTemplate session = sessionTemplateRepository.findById(sessionId)
                 .filter(s -> !s.getIsDeleted())
                 .orElseThrow(() -> new RuntimeException("Session not found"));
 
-        // ── 4. Coach can only update their own session ────────────────
         if (!isAdmin && !session.getCoach().getId().equals(requestingUserId)) {
             throw new RuntimeException("You are not allowed to update another coach's session");
         }
 
-        // ── 5. Validate date/time if provided ─────────────────────────
         LocalDate startDay  = request.getStartDay()  != null ? request.getStartDay()  : session.getStartDay();
         LocalDate endDay    = request.getEndDay()     != null ? request.getEndDay()    : session.getEndDay();
         LocalTime startTime = request.getStartTime() != null ? request.getStartTime() : session.getStartTime();
@@ -174,7 +160,6 @@ public class SessionServiceImpl implements SessionService {
             throw new RuntimeException("Number of seats must be greater than 0");
         }
 
-        // ── 6. Partial update session fields ──────────────────────────
         if (request.getName()        != null) session.setName(request.getName());
         if (request.getDescription() != null) session.setDescription(request.getDescription());
         if (request.getStartDay()    != null) session.setStartDay(request.getStartDay());
@@ -186,12 +171,10 @@ public class SessionServiceImpl implements SessionService {
 
         sessionTemplateRepository.save(session);
 
-        // ── 7. Update availability maxSeat if noOfSeats changed ───────
         if (request.getNoOfSeats() != null) {
             Availability availability = availabilityRepository.findBySessionId(sessionId)
                     .orElseThrow(() -> new RuntimeException("Availability not found for this session"));
 
-            // Make sure new maxSeat is not less than already occupied seats
             if (request.getNoOfSeats() < availability.getOccupiedSeats()) {
                 throw new RuntimeException("New seat count cannot be less than already occupied seats ("
                         + availability.getOccupiedSeats() + ")");
@@ -201,7 +184,6 @@ public class SessionServiceImpl implements SessionService {
             availabilityRepository.save(availability);
         }
 
-        // ── 8. Return response ────────────────────────────────────────
         return CreateSessionResponse.builder()
                 .id(session.getId())
                 .name(session.getName())
@@ -217,7 +199,6 @@ public class SessionServiceImpl implements SessionService {
                 .build();
     }
 
-    // ── Private helper: map session + availability → response ──────────────────
     private SessionWithAvailabilityResponse mapToSessionWithAvailability(SessionTemplate session) {
         Availability availability = availabilityRepository.findBySessionId(session.getId())
                 .orElse(null);
@@ -244,7 +225,7 @@ public class SessionServiceImpl implements SessionService {
     }
 
     @Override
-    @Transactional  // ← ADD THIS
+    @Transactional
     public List<SessionWithAvailabilityResponse> getUpcomingSessions() {
         return sessionTemplateRepository.findUpcomingSessions(LocalDate.now())
                 .stream()
@@ -253,7 +234,7 @@ public class SessionServiceImpl implements SessionService {
     }
 
     @Override
-    @Transactional  // ← ADD THIS
+    @Transactional
     public List<SessionWithAvailabilityResponse> getOngoingSessions() {
         return sessionTemplateRepository.findOngoingSessions(LocalDate.now())
                 .stream()
@@ -262,7 +243,7 @@ public class SessionServiceImpl implements SessionService {
     }
 
     @Override
-    @Transactional  // ← ADD THIS
+    @Transactional
     public List<SessionWithAvailabilityResponse> getCompletedSessions() {
         return sessionTemplateRepository.findCompletedSessions(LocalDate.now())
                 .stream()
@@ -274,7 +255,6 @@ public class SessionServiceImpl implements SessionService {
     @Transactional
     public MySessionsResponse getMySessions(Long requestingUserId) {
 
-        // Verify the user is a COACH
         List<String> roles = userRoleLinkRepository.findByUserId(requestingUserId)
                 .stream()
                 .map(link -> link.getRole().getRoleName())
@@ -315,33 +295,28 @@ public class SessionServiceImpl implements SessionService {
     @Transactional
     public SessionDetailResponse getSessionDetails(Long requestingUserId, Long sessionId, boolean isAdmin) {
 
-        // ── 1. Fetch session ──────────────────────────────────────
         SessionTemplate session = sessionTemplateRepository.findById(sessionId)
                 .filter(s -> !s.getIsDeleted())
                 .orElseThrow(() -> new RuntimeException("Session not found"));
 
-        // ── 2. Auth check ─────────────────────────────────────────
         if (!isAdmin && !session.getCoach().getId().equals(requestingUserId)) {
             throw new RuntimeException("You are not allowed to view this session");
         }
 
-        // ── 3. Fetch availability ─────────────────────────────────
         Availability availability = availabilityRepository.findBySessionId(sessionId)
                 .orElse(null);
 
         int maxSeat       = availability != null ? availability.getMaxSeat()       : 0;
         int occupiedSeats = availability != null ? availability.getOccupiedSeats() : 0;
 
-        // ── 4. Fetch bookings (admin sees all, coach sees active only) ─
         List<Booking> bookings = isAdmin
                 ? bookingRepository.findAllBookingsBySessionId(sessionId)
                 : bookingRepository.findActiveBookingsBySessionId(sessionId);
 
-        // ── 5. Map participants ───────────────────────────────────
         List<ParticipantResponse> participants = bookings.stream()
                 .map(booking -> {
                     User user         = booking.getUser();
-                    UserInfo userInfo = user.getUserInfo(); // nullable
+                    UserInfo userInfo = user.getUserInfo();
 
                     return ParticipantResponse.builder()
                             .bookingId(booking.getId())
@@ -360,7 +335,6 @@ public class SessionServiceImpl implements SessionService {
                 })
                 .toList();
 
-        // ── 6. Build and return response ──────────────────────────
         return SessionDetailResponse.builder()
                 .sessionId(session.getId())
                 .name(session.getName())
@@ -384,7 +358,6 @@ public class SessionServiceImpl implements SessionService {
     @Transactional
     public void deleteSession(Long requestingUserId, Long sessionId) {
 
-        // ── 1. Get roles ──────────────────────────────────────────
         List<String> roles = userRoleLinkRepository.findByUserId(requestingUserId)
                 .stream()
                 .map(link -> link.getRole().getRoleName())
@@ -393,27 +366,22 @@ public class SessionServiceImpl implements SessionService {
         boolean isAdmin = roles.contains("ADMIN");
         boolean isCoach = roles.contains("COACH");
 
-        // ── 2. Only COACH or ADMIN allowed ────────────────────────
         if (!isAdmin && !isCoach) {
             throw new RuntimeException("You are not allowed to delete a session");
         }
 
-        // ── 3. Fetch session ──────────────────────────────────────
         SessionTemplate session = sessionTemplateRepository.findById(sessionId)
                 .filter(s -> !s.getIsDeleted())
                 .orElseThrow(() -> new RuntimeException("Session not found"));
 
-        // ── 4. Coach can only delete their own session ────────────
         if (!isAdmin && !session.getCoach().getId().equals(requestingUserId)) {
             throw new RuntimeException("You are not allowed to delete this session");
         }
 
-        // ── 5. Soft delete session ────────────────────────────────
         session.setIsDeleted(true);
         session.setIsActive(false);
         sessionTemplateRepository.save(session);
 
-        // ── 6. Soft delete linked availability ───────────────────
         availabilityRepository.findBySessionId(sessionId).ifPresent(availability -> {
             availability.setIsDeleted(true);
             availability.setIsActive(false);
@@ -425,7 +393,6 @@ public class SessionServiceImpl implements SessionService {
     @Transactional
     public SessionAnalyticsResponse getSessionAnalytics(Long requestingUserId, Long sessionId) {
 
-        // 1. Get roles
         List<String> roles = userRoleLinkRepository.findByUserId(requestingUserId)
                 .stream()
                 .map(link -> link.getRole().getRoleName())
@@ -434,23 +401,18 @@ public class SessionServiceImpl implements SessionService {
         boolean isAdmin = roles.contains("ADMIN");
         boolean isCoach = roles.contains("COACH");
 
-        System.out.println("WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW");
-
         if (!isAdmin && !isCoach) {
             throw new RuntimeException("You are not allowed to view session analytics");
         }
 
-        // 2. Fetch session
         SessionTemplate session = sessionTemplateRepository.findById(sessionId)
                 .filter(s -> !s.getIsDeleted())
                 .orElseThrow(() -> new RuntimeException("Session not found"));
 
-        // 3. Coach can only see own session analytics
         if (!isAdmin && !session.getCoach().getId().equals(requestingUserId)) {
             throw new RuntimeException("You are not allowed to view this session analytics");
         }
 
-        // 4. Availability
         Availability availability = availabilityRepository.findBySessionId(sessionId)
                 .orElse(null);
 
@@ -464,13 +426,11 @@ public class SessionServiceImpl implements SessionService {
                     .setScale(2, java.math.RoundingMode.HALF_UP);
         }
 
-        // 5. Booking stats
         long totalBookings = bookingRepository.countBySessionIdAndIsDeletedFalse(sessionId);
         long activeBookings = bookingRepository.countBySessionIdAndIsActiveTrueAndIsDeletedFalse(sessionId);
         long cancelledBookings = bookingRepository.countBySessionIdAndIsActiveFalseAndIsDeletedFalse(sessionId);
         long deletedBookings = bookingRepository.countBySessionIdAndIsDeletedTrue(sessionId);
 
-        // 6. Participants - active bookings only
         List<Booking> bookings = isAdmin
                 ? bookingRepository.findAllValidBookingsBySessionId(sessionId)
                 : bookingRepository.findActiveBookingsBySessionId(sessionId);
@@ -491,16 +451,15 @@ public class SessionServiceImpl implements SessionService {
                 })
                 .toList();
 
-        // 7. Feedback stats
         Double avgRating = feedbackRepository.findAverageRatingBySessionId(sessionId);
         BigDecimal averageRating = avgRating != null
                 ? BigDecimal.valueOf(avgRating).setScale(1, java.math.RoundingMode.HALF_UP)
                 : null;
 
-        // 8. Session status
+
         String status = resolveSessionStatus(session);
 
-        // 9. Build response
+
         return SessionAnalyticsResponse.builder()
                 .session(SessionAnalyticsResponse.SessionInfo.builder()
                         .sessionId(session.getId())

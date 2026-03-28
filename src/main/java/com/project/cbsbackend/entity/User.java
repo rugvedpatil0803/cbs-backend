@@ -47,10 +47,8 @@ public class User {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    // ── NEW ───────────────────────────────────────────────────
     @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
     private UserInfo userInfo;
-    // ─────────────────────────────────────────────────────────
 
     @PrePersist
     protected void onCreate() {

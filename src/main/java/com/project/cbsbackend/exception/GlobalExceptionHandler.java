@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.*;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // Handle RuntimeException (your custom errors)
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ApiResponse<?>> handleRuntimeException(RuntimeException ex) {
 
@@ -20,7 +19,6 @@ public class GlobalExceptionHandler {
                         .build());
     }
 
-    // Handle generic exceptions
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<?>> handleException(Exception ex) {
 
